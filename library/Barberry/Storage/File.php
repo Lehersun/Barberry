@@ -48,9 +48,9 @@ class File implements StorageInterface
     {
         $path = $this->filePathById($id);
 
-        $content = $this->filesystem->read($path);
+        $mimeType = $this->filesystem->mimeType($path);
 
-        return ContentType::byString($content);
+        return ContentType::byMime($mimeType);
     }
 
     /**
