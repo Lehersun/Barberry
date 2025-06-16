@@ -3,6 +3,7 @@ namespace Barberry\Storage;
 
 use Barberry\ContentType;
 use Barberry\Destination;
+use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\UploadedFile;
 use GuzzleHttp\Psr7\Utils;
 use League\Flysystem\Filesystem;
@@ -28,7 +29,11 @@ class File implements StorageInterface
     {
         $path = $this->filePathById($id);
         if ($this->filesystem->fileExists($path)){
-            return Utils::streamFor($this->filesystem->readStream($path));
+            $stream = Utils::streamFor($this->filesystem->readStream($path));
+            if ($stream->isSeekable()) {
+                return $stream;
+            }
+            return new CachingStream($stream);
         }
 
         throw new NotFoundException($id);
@@ -43,9 +48,9 @@ class File implements StorageInterface
     {
         $path = $this->filePathById($id);
 
-        $content = $this->filesystem->read($path);
+        $mimeType = $this->filesystem->mimeType($path);
 
-        return ContentType::byString($content);
+        return ContentType::byMime($mimeType);
     }
 
     /**
