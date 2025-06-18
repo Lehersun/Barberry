@@ -48,9 +48,13 @@ class File implements StorageInterface
     {
         $path = $this->filePathById($id);
 
-        $mimeType = $this->filesystem->mimeType($path);
+        $stream = $this->filesystem->readStream($path);
 
-        return ContentType::byMime($mimeType);
+        // Read only the first 4KB of the file. This is more than enough to determine the content type accurately.
+        $fileBeginning = fread($stream, 4096);
+        fclose($stream);
+
+        return ContentType::byString($fileBeginning);
     }
 
     /**
